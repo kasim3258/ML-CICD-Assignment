@@ -1,0 +1,655 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Iris ML Intelligence | CI/CD Dashboard</title>
+
+    <meta name="description"
+          content="Iris Flower Classification Machine Learning project with automated CI/CD using GitHub Actions.">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #080D1B;
+            color: #F5F7FF;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .background-glow {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            background: #4936C9;
+            filter: blur(160px);
+            opacity: 0.18;
+            top: -150px;
+            right: -100px;
+            z-index: -1;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        /* NAVBAR */
+
+        header {
+            padding: 25px 0;
+            border-bottom: 1px solid #202A40;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .logo {
+            font-size: 21px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .logo span {
+            color: #8B7CFF;
+        }
+
+        .nav-status {
+            color: #A8B5CA;
+            font-size: 12px;
+            border: 1px solid #263653;
+            padding: 9px 15px;
+            border-radius: 30px;
+        }
+
+        .status-dot {
+            display: inline-block;
+            height: 8px;
+            width: 8px;
+            background: #F0B84B;
+            border-radius: 50%;
+            margin-right: 7px;
+        }
+
+        /* HERO */
+
+        .hero {
+            padding: 75px 0 45px;
+            text-align: center;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #171D3A;
+            border: 1px solid #403C86;
+            color: #B5A9FF;
+            padding: 9px 17px;
+            border-radius: 30px;
+            font-size: 12px;
+            margin-bottom: 25px;
+        }
+
+        .hero h1 {
+            font-size: clamp(35px, 6vw, 62px);
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 1.15;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(90deg, #8B7CFF, #47C8FF);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .hero p {
+            max-width: 680px;
+            margin: 20px auto;
+            color: #98A7BD;
+            line-height: 1.8;
+            font-size: 14px;
+        }
+
+        /* COMMON SECTION */
+
+        .section-title {
+            font-size: 19px;
+            margin-bottom: 20px;
+        }
+
+        .section-subtitle {
+            color: #8291AA;
+            font-size: 12px;
+            margin-top: 7px;
+        }
+
+        /* STATISTICS */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 17px;
+            margin: 25px 0 55px;
+        }
+
+        .card {
+            background: linear-gradient(145deg, #151F35, #10182A);
+            border: 1px solid #273651;
+            border-radius: 17px;
+            padding: 25px;
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: #7164E8;
+        }
+
+        .card-icon {
+            font-size: 25px;
+            margin-bottom: 20px;
+        }
+
+        .card-label {
+            color: #93A3BB;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .card-value {
+            font-size: 21px;
+            font-weight: 700;
+        }
+
+        .card-description {
+            font-size: 11px;
+            color: #71829C;
+            margin-top: 10px;
+        }
+
+        /* MODEL SECTION */
+
+        .model-section {
+            margin-bottom: 50px;
+        }
+
+        .model-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 20px;
+        }
+
+        .model-info {
+            line-height: 2;
+            color: #A8B5CA;
+            font-size: 13px;
+        }
+
+        .model-info strong {
+            color: #F1F4FF;
+        }
+
+        .accuracy-box {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            min-height: 220px;
+        }
+
+        .accuracy-value {
+            font-size: 49px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #9C8CFF, #48CFFF);
+            -webkit-background-clip: text;
+            color: transparent;
+            margin: 15px 0;
+        }
+
+        /* DATASET */
+
+        .dataset {
+            margin-bottom: 50px;
+        }
+
+        .flower-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 17px;
+        }
+
+        .flower {
+            text-align: center;
+            padding: 30px 15px;
+        }
+
+        .flower-symbol {
+            font-size: 35px;
+            margin-bottom: 14px;
+        }
+
+        .flower h3 {
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .flower p {
+            color: #8F9EB5;
+            font-size: 11px;
+        }
+
+        /* PIPELINE */
+
+        .pipeline {
+            margin-bottom: 50px;
+        }
+
+        .pipeline-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .pipeline-step {
+            text-align: center;
+            padding: 25px 12px;
+        }
+
+        .pipeline-number {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            margin: auto auto 15px;
+            border-radius: 50%;
+            background: #302A67;
+            color: #B5A9FF;
+            font-weight: 700;
+        }
+
+        .pipeline-step h3 {
+            font-size: 13px;
+            margin-bottom: 9px;
+        }
+
+        .pipeline-step p {
+            font-size: 11px;
+            color: #8F9EB5;
+            line-height: 1.6;
+        }
+
+        .pipeline-status {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #A9B6CA;
+            line-height: 1.8;
+        }
+
+        /* FOOTER */
+
+        footer {
+            border-top: 1px solid #202A40;
+            padding: 30px 0;
+            text-align: center;
+            color: #8190A8;
+            font-size: 12px;
+            line-height: 2;
+        }
+
+        footer span {
+            color: #A99AFF;
+        }
+
+        /* BUTTON */
+
+        .refresh-btn {
+            border: 1px solid #6555CB;
+            background: #292451;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .refresh-btn:hover {
+            background: #40348C;
+        }
+
+        /* RESPONSIVE DESIGN */
+
+        @media(max-width: 850px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .pipeline-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .model-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media(max-width: 550px) {
+            .container {
+                width: 92%;
+            }
+
+            .hero {
+                padding: 55px 0 30px;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .flower-list {
+                grid-template-columns: 1fr;
+            }
+
+            .pipeline-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .logo {
+                font-size: 15px;
+            }
+
+            .nav-status {
+                font-size: 10px;
+                padding: 7px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="background-glow"></div>
+
+<!-- NAVIGATION -->
+
+<header>
+    <div class="container">
+        <nav>
+            <div class="logo">
+                IRIS<span>ML.</span>
+            </div>
+
+            <div class="nav-status">
+                <span class="status-dot"></span>
+                CI/CD PROJECT DASHBOARD
+            </div>
+        </nav>
+    </div>
+</header>
+
+<!-- HERO SECTION -->
+
+<section class="hero container">
+
+    <div class="tag">
+        ✦ MACHINE LEARNING AUTOMATION
+    </div>
+
+    <h1>
+        Iris ML <span>Intelligence</span>
+    </h1>
+
+    <p>
+        An intelligent flower classification system powered by
+        Random Forest Machine Learning, automated testing,
+        and continuous integration and deployment using GitHub Actions.
+    </p>
+
+</section>
+
+<!-- STATISTICS -->
+
+<main class="container">
+
+    <section class="stats">
+
+        <div class="card">
+            <div class="card-icon">🧠</div>
+            <div class="card-label">ML ALGORITHM</div>
+            <div class="card-value">Random Forest</div>
+            <div class="card-description">100 Decision Trees</div>
+        </div>
+
+        <div class="card">
+            <div class="card-icon">📊</div>
+            <div class="card-label">DATASET</div>
+            <div class="card-value">Iris Dataset</div>
+            <div class="card-description">3 Flower Categories</div>
+        </div>
+
+        <div class="card">
+            <div class="card-icon">🎯</div>
+            <div class="card-label">MODEL ACCURACY</div>
+            <div class="card-value" id="accuracy">Loading...</div>
+            <div class="card-description">Calculated from test data</div>
+        </div>
+
+        <div class="card">
+            <div class="card-icon">🧪</div>
+            <div class="card-label">TEST CASES</div>
+            <div class="card-value">6 Tests</div>
+            <div class="card-description">Automated Pytest testing</div>
+        </div>
+
+    </section>
+
+    <!-- MODEL INFORMATION -->
+
+    <section class="model-section">
+
+        <h2 class="section-title">Model Performance</h2>
+
+        <div class="model-grid">
+
+            <div class="card">
+                <h3 class="section-title">Model Information</h3>
+
+                <div class="model-info">
+                    <p><strong>Model:</strong> Random Forest Classifier</p>
+                    <p><strong>Dataset:</strong> Iris Flower Dataset</p>
+                    <p><strong>Algorithm:</strong> Ensemble Learning</p>
+                    <p><strong>Estimators:</strong> 100 Trees</p>
+                    <p><strong>Training Split:</strong> 80%</p>
+                    <p><strong>Testing Split:</strong> 20%</p>
+                    <p><strong>Total Samples:</strong> <span id="total">150</span></p>
+                    <p><strong>Training Samples:</strong> <span id="training">120</span></p>
+                    <p><strong>Testing Samples:</strong> <span id="testing">30</span></p>
+                </div>
+            </div>
+
+            <div class="card accuracy-box">
+                <div class="card-label">TEST DATA ACCURACY</div>
+
+                <div class="accuracy-value" id="accuracy-large">
+                    --%
+                </div>
+
+                <p class="card-description">
+                    Actual model evaluation result
+                </p>
+
+                <button class="refresh-btn" onclick="loadResults()">
+                    ↻ Refresh Results
+                </button>
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- DATASET INFORMATION -->
+
+    <section class="dataset">
+
+        <h2 class="section-title">Iris Dataset Classification</h2>
+
+        <p class="section-subtitle">
+            The model identifies three different Iris flower species.
+        </p>
+
+        <div class="flower-list">
+
+            <div class="card flower">
+                <div class="flower-symbol">🌸</div>
+                <h3>Iris Setosa</h3>
+                <p>Class 0</p>
+            </div>
+
+            <div class="card flower">
+                <div class="flower-symbol">🌺</div>
+                <h3>Iris Versicolor</h3>
+                <p>Class 1</p>
+            </div>
+
+            <div class="card flower">
+                <div class="flower-symbol">🌷</div>
+                <h3>Iris Virginica</h3>
+                <p>Class 2</p>
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- CI/CD PIPELINE -->
+
+    <section class="pipeline">
+
+        <h2 class="section-title">CI/CD Automation Pipeline</h2>
+
+        <p class="section-subtitle">
+            Automated machine learning integration and deployment.
+        </p>
+
+        <div class="pipeline-grid">
+
+            <div class="card pipeline-step">
+                <div class="pipeline-number">01</div>
+                <h3>Source Code</h3>
+                <p>GitHub Repository</p>
+            </div>
+
+            <div class="card pipeline-step">
+                <div class="pipeline-number">02</div>
+                <h3>Build & Train</h3>
+                <p>Install dependencies and train ML model</p>
+            </div>
+
+            <div class="card pipeline-step">
+                <div class="pipeline-number">03</div>
+                <h3>Automated Testing</h3>
+                <p>Execute six Pytest test cases</p>
+            </div>
+
+            <div class="card pipeline-step">
+                <div class="pipeline-number">04</div>
+                <h3>Deployment</h3>
+                <p>Publish website using GitHub Pages</p>
+            </div>
+
+        </div>
+
+        <div class="card pipeline-status">
+            <p>
+                <strong>CI Status:</strong>
+                <span id="ci-status">Awaiting first workflow run</span>
+            </p>
+
+            <p>
+                <strong>CD Status:</strong>
+                <span id="cd-status">Awaiting first deployment</span>
+            </p>
+
+            <p>
+                Actual workflow and deployment status will be verified
+                after GitHub Actions is configured and executed.
+            </p>
+        </div>
+
+    </section>
+
+</main>
+
+<!-- FOOTER -->
+
+<footer>
+    <div class="container">
+        <p>Built with Python | Scikit-learn | Pytest | GitHub Actions</p>
+        <p>CI/CD Machine Learning Assignment</p>
+        <p>© 2026 <span>Iris ML Intelligence</span> | All Rights Reserved</p>
+    </div>
+</footer>
+
+<!-- LOAD ACTUAL ML RESULTS -->
+
+<script>
+
+async function loadResults() {
+
+    const accuracy = document.getElementById("accuracy");
+    const largeAccuracy = document.getElementById("accuracy-large");
+
+    try {
+
+        const response = await fetch("./results.json?t=" + Date.now());
+
+        if (!response.ok) {
+            throw new Error("Results file not available");
+        }
+
+        const data = await response.json();
+
+        accuracy.textContent = data.accuracy + "%";
+        largeAccuracy.textContent = data.accuracy + "%";
+
+        document.getElementById("total").textContent =
+            data.total_samples;
+
+        document.getElementById("training").textContent =
+            data.training_samples;
+
+        document.getElementById("testing").textContent =
+            data.testing_samples;
+
+    } catch (error) {
+
+        accuracy.textContent = "Pending";
+        largeAccuracy.textContent = "--%";
+
+        console.log("ML results will appear after CI/CD deployment.");
+
+    }
+
+}
+
+loadResults();
+
+</script>
+
+</body>
+</html>
