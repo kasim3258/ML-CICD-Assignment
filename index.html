@@ -301,6 +301,63 @@
             line-height: 1.8;
         }
 
+        .status-pill {
+            display: inline-block;
+            padding: 3px 10px;
+            margin-left: 5px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.6;
+            border: 1px solid transparent;
+            text-transform: capitalize;
+        }
+
+        .status-success {
+            color: #75E0A1;
+            background: rgba(34, 197, 94, 0.12);
+            border-color: rgba(34, 197, 94, 0.35);
+        }
+
+        .status-failure {
+            color: #FF9292;
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.35);
+        }
+
+        .status-running {
+            color: #F6CE78;
+            background: rgba(234, 179, 8, 0.12);
+            border-color: rgba(234, 179, 8, 0.35);
+        }
+
+        .status-skipped {
+            color: #B8C2D5;
+            background: rgba(148, 163, 184, 0.12);
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+
+        .status-checking {
+            color: #B5A9FF;
+            background: rgba(139, 124, 255, 0.12);
+            border-color: rgba(139, 124, 255, 0.3);
+        }
+
+        .pipeline-updated {
+            margin-top: 8px;
+            color: #8291AA;
+            font-size: 11px;
+        }
+
+        .pipeline-status a {
+            color: #A99AFF;
+            text-decoration: none;
+        }
+
+        .pipeline-status a:hover {
+            text-decoration: underline;
+        }
+
         /* FOOTER */
 
         footer {
@@ -577,17 +634,23 @@
         <div class="card pipeline-status">
             <p>
                 <strong>CI Status:</strong>
-                <span id="ci-status">Awaiting first workflow run</span>
+                <span class="status-pill status-checking" id="ci-status">Checking...</span>
             </p>
 
             <p>
                 <strong>CD Status:</strong>
-                <span id="cd-status">Awaiting first deployment</span>
+                <span class="status-pill status-checking" id="cd-status">Checking...</span>
+            </p>
+
+            <p id="pipeline-updated" class="pipeline-updated">
+                Retrieving the latest GitHub Actions run...
             </p>
 
             <p>
-                Actual workflow and deployment status will be verified
-                after GitHub Actions is configured and executed.
+                <a id="workflow-link"
+                   href="https://github.com/kasim3258/ML-CICD-Assignment/actions"
+                   target="_blank"
+                   rel="noopener noreferrer">View workflow runs on GitHub ↗</a>
             </p>
         </div>
 
@@ -648,6 +711,130 @@ async function loadResults() {
 }
 
 loadResults();
+
+/* Retrieve the real CI and CD job results from the public GitHub Actions API. */
+const GITHUB_OWNER = "kasim3258";
+const GITHUB_REPO = "ML-CICD-Assignment";
+const WORKFLOW_FILE = "cicd.yml";
+
+function setPipelineStatus(element, status) {
+    element.textContent = status;
+    element.className = "status-pill";
+
+    const normalized = String(status).toLowerCase();
+
+    if (normalized === "success") {
+        element.classList.add("status-success");
+    } else if (
+        normalized === "failure" ||
+        normalized === "timed_out" ||
+        normalized === "action_required"
+    ) {
+        element.classList.add("status-failure");
+    } else if (
+        normalized === "running" ||
+        normalized === "queued" ||
+        normalized === "in_progress" ||
+        normalized === "waiting"
+    ) {
+        element.classList.add("status-running");
+    } else if (
+        normalized === "skipped" ||
+        normalized === "cancelled" ||
+        normalized === "neutral"
+    ) {
+        element.classList.add("status-skipped");
+    } else {
+        element.classList.add("status-checking");
+    }
+}
+
+function readableJobStatus(job) {
+    if (!job) return "Waiting";
+
+    if (job.status !== "completed") {
+        return job.status === "in_progress" ? "Running" : "Queued";
+    }
+
+    return job.conclusion || "Unknown";
+}
+
+async function loadPipelineStatus() {
+    const ciElement = document.getElementById("ci-status");
+    const cdElement = document.getElementById("cd-status");
+    const updatedElement = document.getElementById("pipeline-updated");
+
+    if (!ciElement || !cdElement || !updatedElement) return;
+
+    try {
+        const runsUrl =
+            `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}` +
+            `/actions/workflows/${WORKFLOW_FILE}/runs?per_page=1`;
+
+        const runsResponse = await fetch(runsUrl, {
+            headers: { "Accept": "application/vnd.github+json" },
+            cache: "no-store"
+        });
+
+        if (!runsResponse.ok) {
+            throw new Error(`GitHub workflow API returned ${runsResponse.status}`);
+        }
+
+        const runsData = await runsResponse.json();
+        const latestRun = runsData.workflow_runs?.[0];
+
+        if (!latestRun) {
+            setPipelineStatus(ciElement, "No runs");
+            setPipelineStatus(cdElement, "No runs");
+            updatedElement.textContent = "No GitHub Actions runs were found.";
+            return;
+        }
+
+        const jobsResponse = await fetch(latestRun.jobs_url, {
+            headers: { "Accept": "application/vnd.github+json" },
+            cache: "no-store"
+        });
+
+        if (!jobsResponse.ok) {
+            throw new Error(`GitHub jobs API returned ${jobsResponse.status}`);
+        }
+
+        const jobsData = await jobsResponse.json();
+        const jobs = jobsData.jobs || [];
+
+        const ciJob = jobs.find(job =>
+            job.name === "ML Model Build and Testing"
+        );
+
+        const cdJob = jobs.find(job =>
+            job.name === "Deploy ML Dashboard"
+        );
+
+        setPipelineStatus(ciElement, readableJobStatus(ciJob));
+        setPipelineStatus(cdElement, readableJobStatus(cdJob));
+
+        const updatedAt = new Date(latestRun.updated_at);
+        updatedElement.textContent =
+            `Latest run #${latestRun.run_number} • ` +
+            `${latestRun.status === "completed" ? "Completed" : "In progress"} • ` +
+            `Updated ${updatedAt.toLocaleString()}`;
+
+        const workflowLink = document.getElementById("workflow-link");
+        if (workflowLink) {
+            workflowLink.href = latestRun.html_url;
+        }
+
+    } catch (error) {
+        console.error("Unable to load GitHub Actions status:", error);
+        setPipelineStatus(ciElement, "Unavailable");
+        setPipelineStatus(cdElement, "Unavailable");
+        updatedElement.textContent =
+            "Could not retrieve status. Open the workflow runs link to check GitHub Actions.";
+    }
+}
+
+loadPipelineStatus();
+setInterval(loadPipelineStatus, 60000);
 
 </script>
 
